@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Setup LAN</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <button class="geri-butonu" onclick="history.back()">← Geri</button>
+
+  <div class="terminal">
+    <h2>Setup LAN 1</h2>
+    <p>Please enter a valid IP Address</p>
+
+    <label><input type="checkbox" checked> Enable LAN port ens33</label><br><br>
+    <label><input type="checkbox" checked> Enabled IPv4 Networking</label><br>
+    <label><input type="checkbox"> Use DHCP for IPv4 address management</label><br><br>
+
+    <label><input type="checkbox"> Enable IPv6 Networking (static addressing only)</label><br><br>
+    <p>IPv6 Address/Prefix: <input type="text" value="fe80::20c:29ff:fec8:b660/64"></p>
+
+    <hr><br>
+
+    <!-- VM IP Değiştir Formu -->
+    <h2>VM IP Değiştir</h2>
+    <form onsubmit="event.preventDefault(); changeIP();">
+      <label>VM ID:</label>
+      <input type="text" id="vmId" required><br><br>
+
+      <label>Yeni IP:</label>
+      <input type="text" id="newIp" required><br><br>
+
+      <label>Kullanıcı Adı (Username):</label>
+      <input type="text" id="username" required><br><br>
+
+      <label>Şifre (Password):</label>
+      <input type="password" id="password" required><br><br>
+
+      <button type="submit">IP Değiştir</button>
+    </form>
+
+    <p id="result"></p>
+
+    <br><br>
+    <button onclick="alert('Accepted')">Accept</button>
+    <button onclick="window.location.href='index.html'">Cancel</button>
+  </div>
+
+  <!-- Script -->
+  <script>
+    async function changeIP() {
+      const ubuntuIp = document.getElementById('vmId').value;
+      const newIp = document.getElementById('newIp').value;
+      const sshUsername = document.getElementById('username').value;
+      const sshPassword = document.getElementById('password').value;
+
+      try {
+       fetch("http://localhost:5254/api/Ip/change", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    ubuntuIp: document.getElementById("vmId").value,
+    newIp: document.getElementById("newIp").value,
+    sshUsername: document.getElementById("username").value,
+    sshPassword: document.getElementById("password").value
+  })
+})
+.then(response => response.json())
+.then(data => {
+  document.getElementById("result").textContent = data.message || "IP değiştirildi!";
+})
+.catch(error => {
+  document.getElementById("result").textContent = "Hata: " + error.message;
+});
+      } catch (error) {
+        document.getElementById('result').textContent = 'Error: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

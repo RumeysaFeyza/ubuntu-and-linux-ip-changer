@@ -1,0 +1,39 @@
+body {
+  background-color: black;
+  color: lime;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 20px;
+  
+
+}
+
+.terminal {
+  border: 2px solid lime;
+  padding: 20px;
+  width: 600px;
+  margin: auto;
+}
+
+.menu li {
+  list-style: none;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.menu li:hover {
+  background-color: green;
+  color: black;
+}
+.geri-butonu {
+  position: fixed;
+  top: 20px;
+  right: 371px;
+  background-color: lime;
+  color: black;
+  border: none;
+  padding: 8px 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+
