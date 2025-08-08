@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Access Control</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .terminal-box {
+      border: 2px solid lime;
+      color: lime;
+      background-color: black;
+      font-family: monospace;
+      padding: 20px;
+      width: 80%;
+      margin: 30px auto;
+    }
+    .checkbox-group {
+      margin-left: 20px;
+    }
+    .host-row {
+      margin-bottom: 10px;
+    }
+    .btn-group button {
+      margin-right: 10px;
+      padding: 5px 10px;
+      background-color: black;
+      border: 1px solid lime;
+      color: lime;
+      cursor: pointer;
+    }
+    .btn-group button:hover {
+      background-color: lime;
+      color: black;
+    }
+    input[type="text"] {
+      background-color: black;
+      border: 1px solid lime;
+      color: lime;
+      padding: 5px;
+      width: 200px;
+    }
+  </style>
+</head>
+<body style="background-color: black;">
+
+  <div class="terminal-box">
+    <h2>Access Control</h2>
+    <p>
+      This screen configures network access restrictions on a per devices basis.
+      It allows up to three hosts to connect or any host if no restrictions are
+      applied...
+    </p>
+
+    <div class="checkbox-group">
+      <label><input type="checkbox" /> Allow PING responses</label><br>
+      <label><input type="checkbox" /> Block SSH</label><br>
+      <label><input type="checkbox" /> Block ODBC</label>
+    </div>
+
+    <hr style="border-color: lime;">
+
+    <h3>Trusted Hosts</h3>
+
+    <div class="host-row">
+      <input type="text" placeholder="Enter Host 1" />
+      Enable: 
+      <label><input type="checkbox" /> SSH</label>
+      <label><input type="checkbox" /> HTTP/S</label>
+      <label><input type="checkbox" /> ODBC</label>
+    </div>
+
+    <div class="host-row">
+      <input type="text" placeholder="Enter Host 2" />
+      Enable: 
+      <label><input type="checkbox" /> SSH</label>
+      <label><input type="checkbox" /> HTTP/S</label>
+      <label><input type="checkbox" /> ODBC</label>
+    </div>
+
+    <div class="host-row">
+      <input type="text" placeholder="Enter Host 3" />
+      Enable: 
+      <label><input type="checkbox" /> SSH</label>
+      <label><input type="checkbox" /> HTTP/S</label>
+      <label><input type="checkbox" /> ODBC</label>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="window.location.href='index.html'">&lt;&lt; UX</button>
+      <button onclick="cancelForm()">Cancel</button>
+      <button onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <script>
+    function cancelForm() {
+      alert("Cancelled.");
+    }
+
+    function clearForm() {
+      document.querySelectorAll("input[type='text']").forEach(input => input.value = "");
+      document.querySelectorAll("input[type='checkbox']").forEach(box => box.checked = false);
+    }
+  </script>
+</body>
+</html>
