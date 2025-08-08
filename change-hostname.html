@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Change Hostname</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .desc{margin-bottom:14px;line-height:1.4;max-width:75ch}
+    .form-row{display:flex;align-items:center;gap:10px;margin:12px 0}
+    .form-row label{min-width:160px;display:inline-block}
+    input[type="text"]{background:black;border:1px solid lime;color:lime;padding:6px 8px;width:360px;outline:none}
+    .actions{margin-top:16px}
+    .actions button{background:black;border:1px solid lime;color:lime;padding:6px 12px;cursor:pointer;margin-right:8px;font-weight:bold}
+    .actions button:hover{background:lime;color:black}
+    .hint{opacity:.85;margin-top:10px;font-size:.9rem}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Change Hostname</h2>
+
+    <p class="desc">
+      The system hostname is only used internally within the appliance and is not advertised outside of it.
+      The external hostname is controlled through an external DNS server. Keeping defaults like
+      <code>localhost.localdomain</code> is usually safe to prevent operational issues.
+    </p>
+
+    <div class="form-row">
+      <label for="hostname">Hostname:</label>
+      <input id="hostname" type="text" value="localhost.localdomain" />
+    </div>
+
+    <div class="actions">
+      <button onclick="acceptHostname()">Accept</button>
+      <button onclick="window.location.href='index.html'">Cancel</button>
+    </div>
+
+    <p class="hint">Tip: Only letters, digits, and hyphens in labels; use dots to separate labels.</p>
+  </div>
+
+  <script>
+    // RFC-1123 uyumlu basit kontrol
+    const hostnameRegex =
+      /^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?))*$/;
+
+    function isValidHostname(h){
+      if(!h) return false;
+      const v = h.trim().toLowerCase();
+      if(v === "localhost" || v === "localhost.localdomain") return true;
+      return hostnameRegex.test(v);
+    }
+
+    function acceptHostname(){
+      const input = document.getElementById('hostname');
+      const value = input.value.trim();
+
+      if(!isValidHostname(value)){
+        alert("Invalid hostname.\nExamples: host-1, host1.lab, app01.prod.local");
+        input.focus();
+        return;
+      }
+
+      const data = { hostname: value.toLowerCase() };
+      console.log("Hostname:", data);
+      alert("Captured (frontend demo):\n" + JSON.stringify(data, null, 2));
+
+      // Backend'e göndermek istersen burada fetch() ile POST atacağız.
+      // fetch('/api/network/hostname', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) })
+    }
+  </script>
+</body>
+</html>

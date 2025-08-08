@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Setup Name Servers</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .terminal .desc { margin-bottom: 18px; line-height: 1.4; max-width: 70ch; }
+    .form-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+    .form-row label { min-width: 260px; display: inline-block; }
+    input[type="text"]{ background:black; border:1px solid lime; color:lime; padding:6px 8px; width:280px; outline:none; }
+    hr{ border:none; border-top:1px solid lime; margin:16px 0; }
+    .actions{ margin-top:18px; }
+    .actions button{ background:black; border:1px solid lime; color:lime; padding:6px 12px; cursor:pointer; margin-right:8px; font-weight:bold; }
+    .actions button:hover{ background:lime; color:black; }
+    .hint{ opacity:.8; margin-top:14px; font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Setup Name Servers</h2>
+
+    <p class="desc">
+      Specifying the domain name aids the appliance in host address resolution.
+      Add the IP address of at least one DNS server to the name server addresses.
+      These servers provide name to address resolution and may also provide reverse name lookup.
+      A list of multiple servers are queried in order of 1, 2, 3.
+    </p>
+
+    <div class="form-row">
+      <label for="domainName">Appliance's domain name:</label>
+      <input id="domainName" type="text" placeholder="company.com" />
+    </div>
+
+    <hr />
+
+    <div class="form-row">
+      <label for="dns1">Name server 1 IP address:</label>
+      <input id="dns1" type="text" value="192.168.1.1" />
+    </div>
+
+    <div class="form-row">
+      <label for="dns2">Name server 2 IP address:</label>
+      <input id="dns2" type="text" placeholder="" />
+    </div>
+
+    <div class="form-row">
+      <label for="dns3">Name server 3 IP address:</label>
+      <input id="dns3" type="text" placeholder="" />
+    </div>
+
+    <div class="actions">
+      <button onclick="saveDNS()">OK</button>
+      <button onclick="window.location.href='index.html'">Cancel</button>
+    </div>
+
+    <p class="hint">Edit field: Press TAB or ENTER to move to next field.</p>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Enter'a basınca sonraki alana geç
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const focusables = Array.from(document.querySelectorAll('input, button'));
+        const i = focusables.indexOf(document.activeElement);
+        if (i > -1 && i < focusables.length - 1) {
+          e.preventDefault();
+          focusables[i + 1].focus();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Setup IPv4 Network Routes</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Sayfaya özel ufak stiller */
+    .desc { margin-bottom: 14px; line-height: 1.4; max-width: 70ch; }
+    .form-row { display:flex; align-items:center; gap:10px; margin:10px 0; }
+    .form-row label { min-width: 220px; display:inline-block; }
+    input[type="text"]{
+      background:black; border:1px solid lime; color:lime; padding:6px 8px; width:260px; outline:none;
+    }
+    hr{ border:none; border-top:1px solid lime; margin:14px 0; }
+
+    .routes-box{ border:1px dashed lime; padding:8px; margin-top:8px; }
+    .routes-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; align-items:center; }
+    .hdr{ font-weight:bold; }
+    .routes-row{ display:contents; } /* grid içinde satır gibi davranır */
+    .routes-row input{ width:100%; }
+    .routes-list{ margin-top:6px; }
+    .selectable{ cursor:pointer; }
+    .selected input{ background:lime; color:black; border-color:lime; }
+
+    .mini-actions{ margin-top:8px; opacity:.9; }
+    .mini-actions button{ padding:4px 8px; }
+
+    .actions{ margin-top:16px; }
+    .actions button{
+      background:black; border:1px solid lime; color:lime; padding:6px 12px; cursor:pointer; margin-right:8px; font-weight:bold;
+    }
+    .actions button:hover{ background:lime; color:black; }
+
+    .hint{ opacity:.85; margin-top:10px; font-size:.9rem; }
+    .empty{ font-style:italic; opacity:.8; padding:8px 0; }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Setup IPv4 Network Routes</h2>
+
+    <p class="desc">Default Gateway Route:</p>
+    <div class="form-row">
+      <label for="defaultGw">Default gateway IP</label>
+      <input id="defaultGw" type="text" placeholder="e.g. 192.168.1.1" />
+    </div>
+
+    <hr />
+
+    <p class="desc">
+      Static Routes<br />
+      <small>To add a route press <b>CTRL+N</b>, a host press <b>CTRL+O</b>. To delete a route, select it and press <b>CTRL+X</b>.</small>
+    </p>
+
+    <div class="routes-box">
+      <div class="routes-grid hdr">
+        <div>Destination</div><div>Gateway</div><div>Netmask</div>
+      </div>
+
+      <div id="routesList" class="routes-list">
+        <div id="emptyMsg" class="empty">No entries</div>
+      </div>
+
+      <div class="mini-actions">
+        <button onclick="addRoute()">Add (Ctrl+N)</button>
+        <button onclick="toggleHostForSelected()">Host /32 (Ctrl+O)</button>
+        <button onclick="deleteSelected()">Delete (Ctrl+X)</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button onclick="acceptRoutes()">Accept</button>
+      <button onclick="window.location.href='index.html'">Cancel</button>
+    </div>
+
+    <p class="hint">UP/DOWN: move selection • ENTER/TAB: next field</p>
+  </div>
+
+  <script>
+    // --- Helpers ---
+    // DÜZELTİLDİ: \\d -> \d
+    const ipRegex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+
+    function isValidIP(ip){ return ipRegex.test(ip); }
+
+    const routesList = document.getElementById('routesList');
+    let selectedIndex = -1;
+
+    function ensureNotEmptyState(){
+      const hasRows = routesList.querySelectorAll('.routes-row').length > 0;
+      const empty = document.getElementById('emptyMsg');
+      if (hasRows && empty) empty.remove();
+      if (!hasRows && !document.getElementById('emptyMsg')) {
+        const d = document.createElement('div');
+        d.id = 'emptyMsg'; d.className='empty'; d.textContent='No entries';
+        routesList.appendChild(d);
+      }
+    }
+
+    function selectRowByIndex(i){
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      rows.forEach(r => r.classList.remove('selected'));
+      if (rows[i]){
+        rows[i].classList.add('selected');
+        selectedIndex = i;
+        const firstInput = rows[i].querySelector('input');
+        if (firstInput) firstInput.focus();
+      } else {
+        selectedIndex = -1;
+      }
+    }
+
+    function addRoute(prefillHost = false){
+      const row = document.createElement('div');
+      row.className = 'routes-row routes-grid selectable';
+      // DÜZELTİLDİ: \` -> ` (backslash KALDIRILDI)
+      row.innerHTML = `
+        <input type="text" placeholder="e.g. 10.0.0.0" />
+        <input type="text" placeholder="e.g. 10.0.0.1" />
+        <input type="text" placeholder="e.g. 255.255.255.0" />
+      `;
+      routesList.appendChild(row);
+      ensureNotEmptyState();
+
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      const i = rows.length - 1;
+
+      row.addEventListener('click', () => {
+        const idx = Array.from(routesList.querySelectorAll('.routes-row')).indexOf(row);
+        selectRowByIndex(idx);
+      });
+
+      selectRowByIndex(i);
+
+      // Host route (/32)
+      if (prefillHost) {
+        const inputs = row.querySelectorAll('input');
+        inputs[2].value = '255.255.255.255';
+      }
+    }
+
+    function deleteSelected(){
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      if (selectedIndex < 0 || !rows[selectedIndex]) return;
+      rows[selectedIndex].remove();
+      const newLen = routesList.querySelectorAll('.routes-row').length;
+      ensureNotEmptyState();
+      selectRowByIndex(Math.min(selectedIndex, newLen - 1));
+    }
+
+    function toggleHostForSelected(){
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      if (selectedIndex < 0 || !rows[selectedIndex]) return;
+      const maskInput = rows[selectedIndex].querySelectorAll('input')[2];
+      maskInput.value = (maskInput.value === '255.255.255.255') ? '' : '255.255.255.255';
+      maskInput.focus();
+    }
+
+    // Accept -> basit doğrulama + göster
+    function acceptRoutes(){
+      const defaultGw = document.getElementById('defaultGw').value.trim();
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      const data = {
+        defaultGateway: defaultGw || null,
+        staticRoutes: rows.map(r => {
+          const [dst, gw, mask] = Array.from(r.querySelectorAll('input')).map(i => i.value.trim());
+          return { destination: dst, gateway: gw, netmask: mask };
+        })
+      };
+
+      if (defaultGw && !isValidIP(defaultGw)) {
+        alert('Default gateway IP is invalid.');
+        return;
+      }
+      for (const r of data.staticRoutes){
+        if (r.destination && !isValidIP(r.destination)) { alert('Invalid destination IP'); return; }
+        if (r.gateway && !isValidIP(r.gateway)) { alert('Invalid gateway IP'); return; }
+        if (r.netmask && !isValidIP(r.netmask)) { alert('Invalid netmask'); return; }
+      }
+
+      console.log('IPv4 Routes:', data);
+      // DÜZELTİLDİ: "\\n" -> "\n"
+      alert('Captured (frontend demo):\n' + JSON.stringify(data, null, 2));
+    }
+
+    // Kısayollar ve ok tuşları
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); addRoute(false); }
+      if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); addRoute(true); }
+      if (e.ctrlKey && (e.key === 'x' || e.key === 'X')) { e.preventDefault(); deleteSelected(); }
+
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      if (rows.length){
+        if (e.key === 'ArrowDown'){ e.preventDefault(); selectRowByIndex(Math.min(selectedIndex + 1, rows.length - 1)); }
+        if (e.key === 'ArrowUp'){ e.preventDefault(); selectRowByIndex(Math.max(selectedIndex - 1, 0)); }
+      }
+    });
+
+    // İstersen başlangıçta bir satır:
+    // addRoute();
+  </script>
+</body>
+</html>

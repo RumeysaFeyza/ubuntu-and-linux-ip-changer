@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Setup IPv6 Network Routes</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .desc{margin-bottom:14px;line-height:1.4;max-width:70ch}
+    .form-row{display:flex;align-items:center;gap:10px;margin:10px 0}
+    .form-row label{min-width:220px;display:inline-block}
+    input[type="text"]{background:black;border:1px solid lime;color:lime;padding:6px 8px;width:320px;outline:none}
+    hr{border:none;border-top:1px solid lime;margin:14px 0}
+    .routes-box{border:1px dashed lime;padding:8px;margin-top:8px}
+    .routes-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center}
+    .hdr{font-weight:bold}
+    .routes-row{display:contents}
+    .routes-row input{width:100%}
+    .routes-list{margin-top:6px}
+    .selectable{cursor:pointer}
+    .selected input{background:lime;color:black;border-color:lime}
+    .actions{margin-top:16px}
+    .actions button{background:black;border:1px solid lime;color:lime;padding:6px 12px;cursor:pointer;margin-right:8px;font-weight:bold}
+    .actions button:hover{background:lime;color:black}
+    .mini-actions{margin-top:8px;opacity:.9}
+    .mini-actions button{padding:4px 8px}
+    .hint{opacity:.85;margin-top:10px;font-size:.9rem}
+    .empty{font-style:italic;opacity:.8;padding:8px 0}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Setup IPv6 Network Routes</h2>
+
+    <p class="desc">Default Gateway Route:</p>
+    <div class="form-row">
+      <label for="defaultGw6">Default gateway (IPv6)</label>
+      <input id="defaultGw6" type="text" placeholder="ör. fe80::1" />
+    </div>
+
+    <hr />
+
+    <p class="desc">
+      Static Routes<br />
+      <small>
+        To add a route press <b>CTRL+N</b>. To delete a route, select it and press <b>CTRL+X</b>.
+      </small>
+    </p>
+
+    <div class="routes-box">
+      <div class="routes-grid hdr">
+        <div>Destination (IPv6/prefix)</div>
+        <div>Gateway (IPv6)</div>
+      </div>
+
+      <div id="routesList6" class="routes-list">
+        <div id="emptyMsg6" class="empty">No entries</div>
+      </div>
+
+      <div class="mini-actions">
+        <button onclick="addRoute6()">Add (Ctrl+N)</button>
+        <button onclick="deleteSelected6()">Delete (Ctrl+X)</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button onclick="acceptRoutes6()">Accept</button>
+      <button onclick="window.location.href='index.html'">Cancel</button>
+    </div>
+
+    <p class="hint">UP/DOWN: move selection • ENTER/TAB: next field</p>
+  </div>
+
+  <script>
+    // ---- Basit IPv6 doğrulayıcılar ----
+    // IPv6 adresi (:: kısaltması dahil) için geniş regex
+    const ipv6Regex = /^(?:([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:)))(%.+)?$/;
+
+    function isValidIPv6(ip){ return ipv6Regex.test(ip); }
+
+    function isValidIPv6CIDR(value){
+      // "addr/prefix" veya sadece "addr" kabul et
+      const parts = value.split('/');
+      if (parts.length === 1) return isValidIPv6(parts[0]);
+      if (parts.length === 2) {
+        const [addr, pref] = parts;
+        const p = Number(pref);
+        return isValidIPv6(addr) && Number.isInteger(p) && p >= 0 && p <= 128;
+      }
+      return false;
+    }
+
+    // ---- UI state ----
+    const routesList = document.getElementById('routesList6');
+    let selectedIndex = -1;
+
+    function ensureNotEmptyState(){
+      const hasRows = routesList.querySelectorAll('.routes-row').length > 0;
+      const empty = document.getElementById('emptyMsg6');
+      if (hasRows && empty) empty.remove();
+      if (!hasRows && !document.getElementById('emptyMsg6')) {
+        const d = document.createElement('div');
+        d.id = 'emptyMsg6'; d.className='empty'; d.textContent='No entries';
+        routesList.appendChild(d);
+      }
+    }
+
+    function selectRowByIndex(i){
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      rows.forEach(r => r.classList.remove('selected'));
+      if (rows[i]){
+        rows[i].classList.add('selected');
+        selectedIndex = i;
+        const firstInput = rows[i].querySelector('input');
+        if (firstInput) firstInput.focus();
+      } else {
+        selectedIndex = -1;
+      }
+    }
+
+    function addRoute6(){
+      const row = document.createElement('div');
+      row.className = 'routes-row routes-grid selectable';
+      row.innerHTML = `
+        <input type="text" placeholder="ör. 2001:db8::/32" />
+        <input type="text" placeholder="ör. fe80::1" />
+      `;
+      routesList.appendChild(row);
+      ensureNotEmptyState();
+
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      const i = rows.length - 1;
+
+      row.addEventListener('click', () => {
+        const idx = Array.from(routesList.querySelectorAll('.routes-row')).indexOf(row);
+        selectRowByIndex(idx);
+      });
+
+      selectRowByIndex(i);
+    }
+
+    function deleteSelected6(){
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      if (selectedIndex < 0 || !rows[selectedIndex]) return;
+      rows[selectedIndex].remove();
+      const newLen = routesList.querySelectorAll('.routes-row').length;
+      ensureNotEmptyState();
+      selectRowByIndex(Math.min(selectedIndex, newLen - 1));
+    }
+
+    function acceptRoutes6(){
+      const defaultGw = document.getElementById('defaultGw6').value.trim();
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      const data = {
+        defaultGateway6: defaultGw || null,
+        staticRoutes6: rows.map(r => {
+          const [dst, gw] = Array.from(r.querySelectorAll('input')).map(i => i.value.trim());
+          return { destination: dst, gateway: gw };
+        })
+      };
+
+      if (defaultGw && !isValidIPv6(defaultGw)) {
+        alert('Default gateway IPv6 is invalid.');
+        return;
+      }
+      for (const r of data.staticRoutes6){
+        if (r.destination && !isValidIPv6CIDR(r.destination)) { alert('Invalid destination (IPv6 or IPv6/prefix)'); return; }
+        if (r.gateway && !isValidIPv6(r.gateway)) { alert('Invalid gateway IPv6'); return; }
+      }
+
+      console.log('IPv6 Routes:', data);
+      alert('Captured (frontend demo):\n' + JSON.stringify(data, null, 2));
+    }
+
+    // Kısayollar ve ok tuşları
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); addRoute6(); }
+      if (e.ctrlKey && (e.key === 'x' || e.key === 'X')) { e.preventDefault(); deleteSelected6(); }
+
+      const rows = Array.from(routesList.querySelectorAll('.routes-row'));
+      if (rows.length){
+        if (e.key === 'ArrowDown'){ e.preventDefault(); selectRowByIndex(Math.min(selectedIndex + 1, rows.length - 1)); }
+        if (e.key === 'ArrowUp'){ e.preventDefault(); selectRowByIndex(Math.max(selectedIndex - 1, 0)); }
+        if (e.key === 'Enter'){ // Sonraki inputa geç
+          const focusables = Array.from(document.querySelectorAll('input, button'));
+          const i = focusables.indexOf(document.activeElement);
+          if (i > -1 && i < focusables.length - 1) { e.preventDefault(); focusables[i + 1].focus(); }
+        }
+      }
+    });
+
+    // İstersen başlangıçta boş kalsın:
+    // addRoute6();
+  </script>
+</body>
+</html>
