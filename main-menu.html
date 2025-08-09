@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Main Menu</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .menu-wrap{display:flex;gap:16px}
+    .left,.right{border:1px dashed lime;padding:10px}
+    .left{width:320px}
+    .left ul{margin:0;padding:0}
+    .left li{list-style:none;padding:6px 8px;margin:4px 0;cursor:pointer;border:1px solid lime}
+    .left li.active{background:lime;color:black}
+    .right{flex:1}
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:6px;margin-top:6px}
+    .muted{opacity:.85}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Appliance Configuration</h2>
+
+    <div class="menu-wrap">
+      <!-- LEFT: menu -->
+      <div class="left">
+        <ul id="menuItems">
+          <li class="active">Networking Setup &raquo;</li>
+          <li>Security Setup &raquo;</li>
+          <li>Ping Network</li>
+          <li>Network Appliance Test</li>
+          <li>Shutdown Appliance</li>
+          <li>Exit</li>
+        </ul>
+        <p class="muted">UP/DOWN: highlight • ENTER: select</p>
+      </div>
+
+      <!-- RIGHT: summary panel -->
+      <div class="right">
+        <div class="kv"><div>LAN 1:</div><div id="lan1">—</div></div>
+        <div class="kv"><div>MAC:</div><div id="mac">—</div></div>
+        <div class="kv"><div>Domain:</div><div id="domain">—</div></div>
+        <div class="kv"><div>Gateway:</div><div id="gw">—</div></div>
+        <div class="kv"><div>DNS 1:</div><div id="dns1">—</div></div>
+        <div class="kv"><div>DNS 2:</div><div id="dns2">—</div></div>
+        <div class="kv"><div>NTP:</div><div id="ntp">Enabled</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---- keyboard navigation ----
+    const list = document.getElementById('menuItems');
+    const items = Array.from(list.querySelectorAll('li'));
+    let selected = 0;
+
+    function renderSelection(){
+      items.forEach((li,i)=>li.classList.toggle('active', i===selected));
+    }
+
+    items.forEach((li,i)=>{
+      li.addEventListener('click', ()=>{ selected=i; renderSelection(); runAction(); });
+    });
+
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'ArrowDown'){ e.preventDefault(); selected = Math.min(selected+1, items.length-1); renderSelection(); }
+      if (e.key === 'ArrowUp'){ e.preventDefault(); selected = Math.max(selected-1, 0); renderSelection(); }
+      if (e.key === 'Enter'){ e.preventDefault(); runAction(); }
+    });
+
+    function runAction(){
+      switch(selected){
+        case 0: // Networking Setup >>
+          window.location.href = "index.html"; break;
+        case 1: // Security Setup >>
+      window.location.href = "security-setup.html"; break;
+        case 2: // Ping Network
+          alert("Ping test (demo)"); break;
+        case 3: // Network Appliance Test
+          alert("Appliance test (demo)"); break;
+        case 4: // Shutdown
+          if (confirm("Shutdown appliance?")) alert("Shutting down (demo)");
+          break;
+        case 5: // Exit
+          window.history.length > 1 ? history.back() : window.close();
+          break;
+      }
+    }
+
+    // ---- (opsiyonel) sağ paneli doldurma ----
+    // Eğer daha önce sayfalarda localStorage'a yazarak değer tutarsan burada gösterir.
+    // Yoksa '—' kalır, sorun değil.
+    const get = (k, d='—') => localStorage.getItem(k) || d;
+    document.getElementById('lan1').textContent  = get('lan_ip');
+    document.getElementById('mac').textContent   = get('lan_mac');
+    document.getElementById('domain').textContent= get('dns_domain');
+    document.getElementById('gw').textContent    = get('ipv4_gw');
+    document.getElementById('dns1').textContent  = get('dns1');
+    document.getElementById('dns2').textContent  = get('dns2');
+  </script>
+</body>
+</html>

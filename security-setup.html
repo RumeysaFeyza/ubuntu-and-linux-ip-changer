@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Security Configuration</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .menu-wrap{display:flex;gap:16px}
+    .left,.right{border:1px dashed lime;padding:10px}
+    .left{width:320px}
+    .left ul{margin:0;padding:0}
+    .left li{list-style:none;padding:6px 8px;margin:4px 0;cursor:pointer;border:1px solid lime}
+    .left li.active{background:lime;color:black}
+    .right{flex:1}
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:6px;margin-top:6px}
+    .muted{opacity:.85}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Network Configuration: Main Menu</h2>
+
+    <div class="menu-wrap">
+      <!-- LEFT -->
+      <div class="left">
+        <ul id="securityMenu">
+          <li class="active">Change Password</li>
+          <li>Reset Web Password</li>
+          <li>Console Account</li>
+          <li>Console Reboot</li>
+          <li>Network Redirects</li>
+          <li onclick="goToMainMenu()">&lt;&lt; Main Menu</li>
+        </ul>
+        <p class="muted">UP/DOWN: highlight • ENTER: select</p>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right">
+        <div class="kv"><div>LAN 1:</div><div id="lan1">192.168.1.82</div></div>
+        <div class="kv"><div>MAC:</div><div id="mac">80:0C:29:4C:B0:68</div></div>
+        <div class="kv"><div>Domain:</div><div id="domain">—</div></div>
+        <div class="kv"><div>Gateway:</div><div id="gw">192.168.1.1</div></div>
+        <div class="kv"><div>DNS 1:</div><div id="dns1">192.168.1.1</div></div>
+        <div class="kv"><div>DNS 2:</div><div id="dns2">—</div></div>
+        <div class="kv"><div>DNS 3:</div><div id="dns3">—</div></div>
+        <div class="kv"><div>IPACL:</div><div id="ipacl">Enabled</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Menü navigasyonu
+    const list = document.getElementById('securityMenu');
+    const items = Array.from(list.querySelectorAll('li'));
+    let selected = 0;
+
+    function renderSelection(){
+      items.forEach((li,i)=>li.classList.toggle('active', i===selected));
+    }
+
+    items.forEach((li,i)=>{
+      li.addEventListener('click', ()=>{ selected=i; renderSelection(); runAction(); });
+    });
+
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'ArrowDown'){ e.preventDefault(); selected = Math.min(selected+1, items.length-1); renderSelection(); }
+      if (e.key === 'ArrowUp'){ e.preventDefault(); selected = Math.max(selected-1, 0); renderSelection(); }
+      if (e.key === 'Enter'){ e.preventDefault(); runAction(); }
+    });
+
+    function runAction(){
+      switch(selected){
+        case 0: alert("Change Password screen (demo)"); break;
+        case 1: alert("Reset Web Password (demo)"); break;
+        case 2: alert("Console Account (demo)"); break;
+        case 3: alert("Console Reboot (demo)"); break;
+        case 4: alert("Network Redirects (demo)"); break;
+        case 5: goToMainMenu(); break;
+      }
+    }
+
+    function goToMainMenu(){
+      window.location.href = "main-menu.html";
+    }
+  </script>
+</body>
+</html>

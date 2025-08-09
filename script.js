@@ -18,4 +18,7 @@ function goToIPv6Routes() {
 function goToChangeHostname() {
   window.location.href = "change-hostname.html";
 }
+function goToMainMenu() {
+  window.location.href = "main-menu.html";
+}
 
