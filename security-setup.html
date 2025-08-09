@@ -70,11 +70,11 @@
 
     function runAction(){
       switch(selected){
-        case 0: alert("Change Password screen (demo)"); break;
-        case 1: alert("Reset Web Password (demo)"); break;
-        case 2: alert("Console Account (demo)"); break;
-        case 3: alert("Console Reboot (demo)"); break;
-        case 4: alert("Network Redirects (demo)"); break;
+        case 0:window.location.href = "change-password.html";break;
+        case 1:window.location.href = "reset-web-password.html";break;
+        case 2:window.location.href = "console-account.html"; break; 
+        case 3:window.location.href = "console-reboot.html"; break;
+        case 4:window.location.href = "network-redirects.html"; break;
         case 5: goToMainMenu(); break;
       }
     }

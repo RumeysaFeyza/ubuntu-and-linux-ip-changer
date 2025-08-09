@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Console Account Lock/Unlock</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .terminal{max-width:800px;margin:20px auto}
+    .desc{line-height:1.4;max-width:75ch;margin-bottom:16px}
+    .kv{margin:10px 0}
+    .btns{margin-top:12px}
+    .btns button{
+      background:black;border:1px solid lime;color:lime;
+      padding:6px 12px;font-weight:bold;cursor:pointer;margin-right:8px
+    }
+    .btns button:hover{background:lime;color:black}
+    .badge{display:inline-block;border:1px solid lime;padding:2px 6px;margin-left:6px}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Security Configuration : Console Account Lock/Unlock</h2>
+
+    <p class="desc">
+      Access to the console account is restricted to authorized users.
+      When the account is <b>locked</b>, access is prevented even if the password is known.
+      You may lock or unlock the console account here.
+    </p>
+
+    <div class="kv">
+      <b>Status:</b>
+      <span id="statusText">Locked</span>
+      <span id="statusBadge" class="badge">LOCKED</span>
+    </div>
+
+    <div class="btns">
+      <button id="btnToggle">Toggle</button>
+      <button id="btnReturn">Return</button>
+    </div>
+
+    <p class="desc" style="opacity:.85;margin-top:12px">
+      Tips: <b>Enter</b> = Toggle • <b>Esc</b> = Return
+    </p>
+  </div>
+
+  <script>
+    // Persist durum için localStorage anahtarı
+    const KEY = "console_locked"; // "true" | "false"
+
+    const statusText = document.getElementById('statusText');
+    const statusBadge = document.getElementById('statusBadge');
+    const btnToggle = document.getElementById('btnToggle');
+    const btnReturn = document.getElementById('btnReturn');
+
+    function getLocked(){
+      // varsayılan: locked
+      return localStorage.getItem(KEY) === null ? true : localStorage.getItem(KEY) === "true";
+    }
+
+    function setLocked(v){
+      localStorage.setItem(KEY, v ? "true" : "false");
+      render();
+    }
+
+    function render(){
+      const locked = getLocked();
+      statusText.textContent = locked ? "Locked" : "Unlocked";
+      statusBadge.textContent = locked ? "LOCKED" : "UNLOCKED";
+    }
+
+    btnToggle.addEventListener('click', () => setLocked(!getLocked()));
+    btnReturn.addEventListener('click', () => window.location.href = 'security-setup.html');
+
+    // Klavye kısayolları
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); btnToggle.click(); }
+      if(e.key === 'Escape'){ e.preventDefault(); btnReturn.click(); }
+    });
+
+    render();
+  </script>
+</body>
+</html>

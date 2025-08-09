@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Appliance Configuration : Ping</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .terminal{max-width:900px;margin:20px auto}
+    .desc{line-height:1.4;max-width:75ch;margin-bottom:14px}
+    .box{border:1px dashed lime;min-height:220px;padding:10px}
+    .results{white-space:pre-wrap;font-family:monospace}
+    .actions{margin-top:10px}
+    .actions button{background:black;border:1px solid lime;color:lime;
+      padding:6px 12px;font-weight:bold;cursor:pointer;margin-right:8px}
+    .actions button:hover{background:lime;color:black}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Appliance Configuration : Ping</h2>
+
+    <p class="desc">
+      To test if a remote host’s network stack is responding to ICMP Echo Requests,
+      select the <b>Test</b> button. A dialog will prompt for the destination address
+      and the results will be displayed below.
+    </p>
+
+    <div class="box">
+      <div id="results" class="results"></div>
+    </div>
+
+    <div class="actions">
+      <button id="btnTest">Test</button>
+      <button id="btnCancel">Cancel</button>
+    </div>
+
+    <p class="desc" style="opacity:.85">ENTER: Test • ESC: Cancel</p>
+  </div>
+
+  <script>
+    const results = document.getElementById('results');
+    const btnTest = document.getElementById('btnTest');
+    const btnCancel = document.getElementById('btnCancel');
+
+    // basit doğrulamalar
+    const ipv4 = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+    const hostname = /^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?))*$/;
+
+    function isValidTarget(t){ return ipv4.test(t) || hostname.test(t); }
+
+    // küçük bir “simüle ping” yazalım (frontend-only)
+    function simulatePing(target, count = 4){
+      results.textContent = ""; // temizle
+      const header = `PING ${target}:\n`;
+      results.textContent += header;
+
+      let sent = 0, received = 0;
+      function step(){
+        if (sent >= count){
+          const loss = Math.round(((count - received)/count) * 100);
+          results.textContent +=
+            `\n--- ${target} ping statistics ---\n` +
+            `${count} packets transmitted, ${received} received, ${loss}% packet loss\n`;
+          return;
+        }
+        sent++;
+        // 15% paket kaybı simülasyonu
+        const ok = Math.random() > 0.15;
+        if (ok){
+          received++;
+          const time = (Math.random()*20 + 1).toFixed(2);
+          results.textContent += `64 bytes from ${target}: icmp_seq=${sent} ttl=64 time=${time} ms\n`;
+        }else{
+          results.textContent += `Request timeout for icmp_seq ${sent}\n`;
+        }
+        setTimeout(step, 350);
+      }
+      step();
+    }
+
+    btnTest.addEventListener('click', ()=>{
+      const target = prompt("Destination (IP or hostname):", "8.8.8.8");
+      if (target === null) return;
+      const t = target.trim();
+      if (!isValidTarget(t)){
+        alert("Please enter a valid IPv4 or hostname.");
+        return;
+      }
+      simulatePing(t, 4);
+    });
+
+    btnCancel.addEventListener('click', ()=> window.location.href = 'main-menu.html');
+
+    // klavye kısayolları
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ e.preventDefault(); btnTest.click(); }
+      if (e.key === 'Escape'){ e.preventDefault(); btnCancel.click(); }
+    });
+  </script>
+</body>
+</html>

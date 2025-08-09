@@ -24,13 +24,14 @@
       <!-- LEFT: menu -->
       <div class="left">
         <ul id="menuItems">
-          <li class="active">Networking Setup &raquo;</li>
-          <li>Security Setup &raquo;</li>
-          <li>Ping Network</li>
-          <li>Network Appliance Test</li>
-          <li>Shutdown Appliance</li>
-          <li>Exit</li>
-        </ul>
+         <li class="active">Networking Setup &raquo;</li>
+         <li>Security Setup &raquo;</li>
+         <li>Ping Network Test</li>
+         <li>Routing Network Test</li>
+         <li>Restart Appliance</li>
+         <li>Shutdown Appliance</li>
+         <li>Exit</li>
+      </ul>
         <p class="muted">UP/DOWN: highlight • ENTER: select</p>
       </div>
 
@@ -68,23 +69,36 @@
     });
 
     function runAction(){
-      switch(selected){
-        case 0: // Networking Setup >>
-          window.location.href = "index.html"; break;
-        case 1: // Security Setup >>
-      window.location.href = "security-setup.html"; break;
-        case 2: // Ping Network
-          alert("Ping test (demo)"); break;
-        case 3: // Network Appliance Test
-          alert("Appliance test (demo)"); break;
-        case 4: // Shutdown
-          if (confirm("Shutdown appliance?")) alert("Shutting down (demo)");
-          break;
-        case 5: // Exit
-          window.history.length > 1 ? history.back() : window.close();
-          break;
-      }
+    switch(selected){
+      case 0: // Networking Setup >>
+        window.location.href = "index.html";
+        break;
+      case 1: // Security Setup >>
+        window.location.href = "security-setup.html";
+        break;
+      case 2: // Ping Network Test
+        window.location.href = "ping-test.html";
+        break;
+      case 3: // Routing Network Test
+       window.location.href = "routing-test.html";
+        break;
+      case 4: // Restart Appliance
+        if (confirm("Restart appliance now?")){
+          alert("Restarting (demo)");
+          // Backend'e istek atılacaksa burada: fetch('/api/restart', {method:'POST'})
+        }
+        break;
+      case 5: // Shutdown Appliance
+        if (confirm("Shutdown appliance now?")){
+          alert("Shutting down (demo)");
+          // fetch('/api/shutdown', {method:'POST'})
+        }
+        break;
+      case 6: // Exit
+        window.history.length > 1 ? history.back() : window.close();
+        break;
     }
+  }
 
     // ---- (opsiyonel) sağ paneli doldurma ----
     // Eğer daha önce sayfalarda localStorage'a yazarak değer tutarsan burada gösterir.

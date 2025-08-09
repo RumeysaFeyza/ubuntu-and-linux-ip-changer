@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Appliance Configuration : Traceroute</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .terminal { max-width: 900px; margin: 20px auto; }
+    .desc { line-height: 1.4; max-width: 75ch; margin-bottom: 14px; }
+    .box { border: 1px dashed lime; min-height: 220px; padding: 10px; }
+    .results { white-space: pre-wrap; font-family: monospace; }
+    .actions { margin-top: 10px; }
+    .actions button {
+      background: black;
+      border: 1px solid lime;
+      color: lime;
+      padding: 6px 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    .actions button:hover { background: lime; color: black; }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Appliance Configuration : Traceroute</h2>
+
+    <p class="desc">
+      To determine the route a packet travels through the network,
+      select the <b>Test</b> button. A dialog will prompt for the destination address
+      and the trace results will be displayed below.
+    </p>
+
+    <div class="box">
+      <div id="results" class="results"></div>
+    </div>
+
+    <div class="actions">
+      <button id="btnTest">Test</button>
+      <button id="btnCancel">Cancel</button>
+    </div>
+
+    <p class="desc" style="opacity:.85">ENTER: Test • ESC: Cancel</p>
+  </div>
+
+  <script>
+    const results = document.getElementById('results');
+    const btnTest = document.getElementById('btnTest');
+    const btnCancel = document.getElementById('btnCancel');
+
+    const ipv4 = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+    const hostname = /^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?))*$/;
+    function isValidTarget(t){ return ipv4.test(t) || hostname.test(t); }
+
+    function simulateTraceroute(target, hops = 8) {
+      results.textContent = `Tracing route to ${target} over a maximum of ${hops} hops:\n\n`;
+      let hop = 1;
+      function step() {
+        if (hop > hops) {
+          results.textContent += `\nTrace complete.`;
+          return;
+        }
+        const ip = `192.168.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+        const time1 = (Math.random()*50 + 1).toFixed(2);
+        const time2 = (Math.random()*50 + 1).toFixed(2);
+        const time3 = (Math.random()*50 + 1).toFixed(2);
+        results.textContent += `${hop}   ${time1} ms   ${time2} ms   ${time3} ms   ${ip}\n`;
+        hop++;
+        setTimeout(step, 350);
+      }
+      step();
+    }
+
+    btnTest.addEventListener('click', ()=>{
+      const target = prompt("Destination (IP or hostname):", "8.8.8.8");
+      if (target === null) return;
+      const t = target.trim();
+      if (!isValidTarget(t)){
+        alert("Please enter a valid IPv4 or hostname.");
+        return;
+      }
+      simulateTraceroute(t, 8);
+    });
+
+    btnCancel.addEventListener('click', ()=> window.location.href = 'main-menu.html');
+
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ e.preventDefault(); btnTest.click(); }
+      if (e.key === 'Escape'){ e.preventDefault(); btnCancel.click(); }
+    });
+  </script>
+</body>
+</html>

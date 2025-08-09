@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Network Redirect Processing</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .terminal{max-width:800px;margin:20px auto}
+    .desc{line-height:1.4;max-width:75ch;margin-bottom:16px}
+    .kv{margin:10px 0}
+    .btns{margin-top:12px}
+    .btns button{
+      background:black;border:1px solid lime;color:lime;
+      padding:6px 12px;font-weight:bold;cursor:pointer;margin-right:8px
+    }
+    .btns button:hover{background:lime;color:black}
+    .badge{display:inline-block;border:1px solid lime;padding:2px 6px;margin-left:6px}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h2>Security Configuration : Network Redirect Processing</h2>
+
+    <p class="desc">
+      This option controls the appliance's response to network redirects.
+      If enabled, the system will use routing instructions in the network redirects.
+    </p>
+
+    <p class="desc">
+      When disabled, only static or DHCP-assigned route entries will affect packets.
+    </p>
+
+    <div class="kv">
+      <b>Status:</b>
+      <span id="statusText">Enabled</span>
+      <span id="statusBadge" class="badge">ENABLED</span>
+    </div>
+
+    <div class="btns">
+      <button id="btnToggle">Toggle</button>
+      <button id="btnReturn">Return</button>
+    </div>
+
+    <p class="desc" style="opacity:.85;margin-top:12px">
+      Tips: <b>Enter</b> = Toggle • <b>Esc</b> = Return
+    </p>
+  </div>
+
+  <script>
+    const KEY = "network_redirects_enabled"; // "true" | "false"
+
+    const statusText = document.getElementById('statusText');
+    const statusBadge = document.getElementById('statusBadge');
+    const btnToggle = document.getElementById('btnToggle');
+    const btnReturn = document.getElementById('btnReturn');
+
+    function getEnabled(){
+      return localStorage.getItem(KEY) === "true";
+    }
+
+    function setEnabled(v){
+      localStorage.setItem(KEY, v ? "true" : "false");
+      render();
+    }
+
+    function render(){
+      const enabled = getEnabled();
+      statusText.textContent = enabled ? "Enabled" : "Disabled";
+      statusBadge.textContent = enabled ? "ENABLED" : "DISABLED";
+    }
+
+    btnToggle.addEventListener('click', () => setEnabled(!getEnabled()));
+    btnReturn.addEventListener('click', () => window.location.href = 'security-setup.html');
+
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); btnToggle.click(); }
+      if(e.key === 'Escape'){ e.preventDefault(); btnReturn.click(); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
