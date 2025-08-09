@@ -14,6 +14,29 @@
     .right{flex:1}
     .kv{display:grid;grid-template-columns:180px 1fr;gap:6px;margin-top:6px}
     .muted{opacity:.85}
+
+    /* Confirm modal stilleri */
+    .modal{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.55); z-index:50;
+    }
+    .hidden{ display:none; }
+    .dialog{
+      background:#000; border:1px dashed lime;
+      padding:12px 14px; min-width:420px;
+    }
+    .title{
+      position:relative; top:-12px;
+      background:#000; display:inline-block; padding:0 6px;
+    }
+    .box{ border:1px dashed lime; padding:10px; }
+    .tbtn{
+      background:#000; border:1px solid lime; color:lime;
+      padding:4px 10px; font-weight:bold; cursor:pointer; margin-right:8px;
+    }
+    .tbtn.active, .tbtn:hover{ background:lime; color:#000; }
+    .btnrow{ display:flex; gap:8px; }
   </style>
 </head>
 <body>
@@ -24,14 +47,14 @@
       <!-- LEFT: menu -->
       <div class="left">
         <ul id="menuItems">
-         <li class="active">Networking Setup &raquo;</li>
-         <li>Security Setup &raquo;</li>
-         <li>Ping Network Test</li>
-         <li>Routing Network Test</li>
-         <li>Restart Appliance</li>
-         <li>Shutdown Appliance</li>
-         <li>Exit</li>
-      </ul>
+          <li class="active">Networking Setup &raquo;</li>
+          <li>Security Setup &raquo;</li>
+          <li>Ping Network Test</li>
+          <li>Routing Network Test</li>
+          <li>Restart Appliance</li>
+          <li>Shutdown Appliance</li>
+          <li>Exit</li>
+        </ul>
         <p class="muted">UP/DOWN: highlight • ENTER: select</p>
       </div>
 
@@ -49,6 +72,9 @@
   </div>
 
   <script>
+    // --- modal açık mı? menü kısayollarını durdurmak için global state
+    let confirmOpen = false;
+
     // ---- keyboard navigation ----
     const list = document.getElementById('menuItems');
     const items = Array.from(list.querySelectorAll('li'));
@@ -63,46 +89,35 @@
     });
 
     document.addEventListener('keydown', (e)=>{
+      if (confirmOpen) return; // modal açıkken menü kısayollarını kapat
       if (e.key === 'ArrowDown'){ e.preventDefault(); selected = Math.min(selected+1, items.length-1); renderSelection(); }
       if (e.key === 'ArrowUp'){ e.preventDefault(); selected = Math.max(selected-1, 0); renderSelection(); }
       if (e.key === 'Enter'){ e.preventDefault(); runAction(); }
     });
 
     function runAction(){
-    switch(selected){
-      case 0: // Networking Setup >>
-        window.location.href = "index.html";
-        break;
-      case 1: // Security Setup >>
-        window.location.href = "security-setup.html";
-        break;
-      case 2: // Ping Network Test
-        window.location.href = "ping-test.html";
-        break;
-      case 3: // Routing Network Test
-       window.location.href = "routing-test.html";
-        break;
-      case 4: // Restart Appliance
-        if (confirm("Restart appliance now?")){
-          alert("Restarting (demo)");
-          // Backend'e istek atılacaksa burada: fetch('/api/restart', {method:'POST'})
-        }
-        break;
-      case 5: // Shutdown Appliance
-        if (confirm("Shutdown appliance now?")){
-          alert("Shutting down (demo)");
-          // fetch('/api/shutdown', {method:'POST'})
-        }
-        break;
-      case 6: // Exit
-        window.history.length > 1 ? history.back() : window.close();
-        break;
+      switch(selected){
+        case 0: window.location.href = "index.html"; break;
+        case 1: window.location.href = "security-setup.html"; break;
+        case 2: window.location.href = "ping-test.html"; break;
+        case 3: window.location.href = "routing-test.html"; break;
+        case 4: window.openConfirm("Restart appliance?", ()=> alert("Rebooting... (frontend demo)")); break;
+        case 5: window.openConfirm("Shutdown appliance?", ()=> alert("Shutting down... (frontend demo)")); break;
+        case 6: // Exit
+  openConfirm("Exit configuration?", () => {
+    // Onaylandığında ne olacağını burada belirliyoruz:
+    if (window.history.length > 1) {
+      history.back();
+    } else {
+      // Yedek davranış: ana ekrana dön (istersen farklı sayfa verebilirsin)
+      window.location.href = "index.html";
     }
-  }
+  });
+  break;
+      }
+    }
 
     // ---- (opsiyonel) sağ paneli doldurma ----
-    // Eğer daha önce sayfalarda localStorage'a yazarak değer tutarsan burada gösterir.
-    // Yoksa '—' kalır, sorun değil.
     const get = (k, d='—') => localStorage.getItem(k) || d;
     document.getElementById('lan1').textContent  = get('lan_ip');
     document.getElementById('mac').textContent   = get('lan_mac');
@@ -110,6 +125,65 @@
     document.getElementById('gw').textContent    = get('ipv4_gw');
     document.getElementById('dns1').textContent  = get('dns1');
     document.getElementById('dns2').textContent  = get('dns2');
+
+    // === Modal'ı DOM yüklendikten sonra başlat ===
+    document.addEventListener('DOMContentLoaded', () => {
+      let ynIndex = 1;                // 0:Yes, 1:No (varsayılan No)
+      let onConfirmYes = () => {};
+
+      const modal = document.getElementById('confirmModal');
+      const questionEl = document.getElementById('questionText');
+      const yesEl = document.getElementById('yesBtn');
+      const noEl  = document.getElementById('noBtn');
+
+      if (!modal || !questionEl || !yesEl || !noEl) return; // güvenlik
+
+      function renderYN(){
+        yesEl.classList.toggle('active', ynIndex === 0);
+        noEl.classList.toggle('active',  ynIndex === 1);
+      }
+
+      // global olarak export et (runAction içinden çağırıyoruz)
+      window.openConfirm = function(questionText, yesCallback){
+        questionEl.textContent = questionText;
+        onConfirmYes = yesCallback || (()=>{});
+        ynIndex = 1;
+        renderYN();
+        modal.classList.remove('hidden');
+        confirmOpen = true;
+      };
+
+      function closeConfirm(){
+        modal.classList.add('hidden');
+        confirmOpen = false;
+      }
+
+      yesEl.addEventListener('click', ()=>{ onConfirmYes(); closeConfirm(); });
+      noEl .addEventListener('click', ()=> closeConfirm());
+
+      // Modal açıkken klavye kontrolü
+      document.addEventListener('keydown', (e)=>{
+        if(!confirmOpen) return;
+        if(['ArrowLeft','ArrowRight','Enter','Escape'].includes(e.key)) e.preventDefault();
+        if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ ynIndex = ynIndex === 0 ? 1 : 0; renderYN(); }
+        if(e.key === 'Enter'){ ynIndex === 0 ? yesEl.click() : noEl.click(); }
+        if(e.key === 'Escape'){ closeConfirm(); }
+      });
+    });
   </script>
+
+  <!-- Confirm Modal HTML -->
+  <div id="confirmModal" class="modal hidden">
+    <div class="dialog">
+      <div class="title">Please confirm</div>
+      <div class="box">
+        <div id="questionText" style="margin-bottom:8px;">Question?</div>
+        <div class="btnrow">
+          <button id="yesBtn" class="tbtn">&lt; Yes &gt;</button>
+          <button id="noBtn"  class="tbtn active">&lt; No &gt;</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
